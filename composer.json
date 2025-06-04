@@ -1,6 +1,6 @@
 {
-    "name": "mindef/demo",
-    "description": "Proyecto MVC demo",
+    "name": "app03/jemg",
+    "description": "Proyecto extra",
     "type": "project",
     "config": {
         "platform-check": false
