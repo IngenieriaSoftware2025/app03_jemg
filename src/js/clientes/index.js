@@ -27,6 +27,7 @@ const validacionTelefono = () => {
                 icon: "warning",
                 title: "Revice el número de telefono",
                 text: "La cantidad de digitos debe de ser mayor o igual a 8 digitos",
+                showConfirmButton: false,
                 timer: 3000
             })
 
@@ -74,6 +75,7 @@ const EsValidoNit = () => {
             icon: "warning",
             title: "NIT INVALIDO",
             text: "El numero de nit ingresado es invalido",
+            showConfirmButton: false,
             timer: 3000
         });
 
@@ -91,6 +93,7 @@ const GuardarCliente = async (event) => {
             icon: "warning",
             title: "FORMULARIO INCOMPLETO",
             text: "Debe de validar todos los campos",
+            showConfirmButton: false,
             timer: 3000
         });
         return;
@@ -119,6 +122,7 @@ const GuardarCliente = async (event) => {
                 icon: "success",
                 title: "Exito",
                 text: mensaje,
+                showConfirmButton: false,
                 timer: 3000,
             });
 
@@ -131,6 +135,7 @@ const GuardarCliente = async (event) => {
                 icon: "error",
                 title: "Error",
                 text: mensaje,
+                showConfirmButton: false,
                 timer: 3000,
             });
             return;
@@ -197,10 +202,57 @@ const datatable = new DataTable('#TableClientes', {
     ],
 })
 
+const BuscarCliente = async () =>{
+    const url = '/app03_jemg/clientes/buscarCliente';
+    const config = {
+        method: 'GET'
+    }
 
+    try {
+        const respuesta = await fetch(url, config)
+        const datos = await respuesta.json();
+        const { codigo, mensaje, data } = datos
+
+        if (codigo ===1) {
+            Swal.fire({
+                position: "center",
+                icon: "success",
+                title: "Exito",
+                text: mensaje,
+                showConfirmButton: false,
+                timer: 3000,
+            });
+
+            datatable.clear().draw();
+            datatable.rows.add(data).draw();
+            
+        } else {
+            Swal.fire({
+                position: "center",
+                icon: "Info",
+                title: "Error",
+                text: mensaje,
+                showConfirmButton: false,
+                timer: 3000,
+            });
+            return;
+        }
+    } catch (error) {
+        console.log(error);
+        
+    }
+
+}
+
+const llenarFormulario = (event) => {
+    const datos = event.currentTarget.dataset
+
+    
+}
 
 
 //Eventos
+BuscarCliente();
 //datatable.on('click', 'eliminar' EliminarClientes);
 //datatable.on('click', 'modificar' llenarClientes);
 validarTelefono.addEventListener('change', validacionTelefono);

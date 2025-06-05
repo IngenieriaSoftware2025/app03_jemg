@@ -92,4 +92,39 @@ class ClienteController extends ActiveRecord
             ]);
         }
     }
+
+
+    public static function buscarCliente(){
+        
+        try {
+            $sql = "SELECT * FROM clientes WHERE cliente_situacion = 1";
+            $data = self::fetchArray($sql);
+
+            if (count($data) > 0) {
+                http_response_code(200);
+                echo json_encode([
+                    'codigo' => 1,
+                    'mensaje' => 'Clientes obtenidos correctamente',
+                    'data' => $data
+
+                ]);
+            }else{
+                http_response_code(400);
+                echo json_encode([
+                    'codigo' => 0,
+                    'mensaje' => 'Error al obtener clientes',
+                    'detalle' => 'No hay clientes'
+                ]);
+
+            }
+
+        } catch (Exception $e) {
+            http_response_code(500);
+                echo json_encode([
+                    'codigo' => 0,
+                    'mensaje' => 'Error en el servidor',
+                    'detalle' => $e->getMessage()
+                ]);
+        }
+    }
 }
