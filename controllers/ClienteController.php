@@ -220,4 +220,6 @@ class ClienteController extends ActiveRecord
        }
 
     }
+
+    
 }

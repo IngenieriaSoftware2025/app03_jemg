@@ -128,7 +128,7 @@ const GuardarCliente = async (event) => {
             });
 
             limpiarTodo();
-            BuscarClientes();
+            BuscarCliente();
 
         } else {
             Swal.fire({
@@ -312,7 +312,7 @@ const ModificarCliente = async (event) => {
             });
 
             limpiarTodo();
-            BuscarClientes();
+            BuscarCliente();
 
         } else {
             Swal.fire({
@@ -328,8 +328,16 @@ const ModificarCliente = async (event) => {
 
     } catch (error) {
         console.log(error);
-        
     }
+    BtnModificar.disabled = false;
+}
+
+const EliminarCliente = async (e) => {
+    const idCliente = e.currentTarget.dataset.id
+
+    const AlertaConfirmarEliminar = await Swal.fire({
+
+    })
 }
 
 
