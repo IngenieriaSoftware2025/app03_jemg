@@ -8,6 +8,7 @@ import { error } from "jquery";
 const FormClientes = document.getElementById('FormClientes');
 const BtnGuardar = document.getElementById('BtnGuardar');
 const BtnModificar = document.getElementById('BtnModificar');
+const BtnLimpiar = document.getElementById('BtnLimpiar');
 const BtnEliminar = document.getElementById('BtnEliminar');
 const validarTelefono = document.getElementById('cliente_telefono');
 const validarNit = document.getElementById('cliente_nit');
@@ -126,8 +127,8 @@ const GuardarCliente = async (event) => {
                 timer: 3000,
             });
 
-            //limpiarTodo();
-            //BuscarClientes();
+            limpiarTodo();
+            BuscarClientes();
 
         } else {
             Swal.fire({
@@ -185,7 +186,7 @@ const datatable = new DataTable('#TableClientes', {
                 <div class='d-flex justify-content-center'>
                      <button class='btn btn-warning modificar mx-1' 
                          data-id="${data}" 
-                         data-nombre="${row.cliente_nombres}"  
+                         data-nombres="${row.cliente_nombres}"  
                          data-apellidos="${row.cliente_apellidos}"  
                          data-nit="${row.cliente_nit}"  
                          data-telefono="${row.cliente_telefono}"  
@@ -247,16 +248,104 @@ const BuscarCliente = async () =>{
 const llenarFormulario = (event) => {
     const datos = event.currentTarget.dataset
 
-    
+    document.getElementById('cliente_id').value = datos.id
+    document.getElementById('cliente_nombres').value = datos.nombres
+    document.getElementById('cliente_apellidos').value = datos.apellidos
+    document.getElementById('cliente_nit').value = datos.nit
+    document.getElementById('cliente_telefono').value = datos.telefono
+    document.getElementById('cliente_correo').value = datos.correo
+
+    BtnGuardar.classList.add('d-none');
+    BtnModificar.classList.remove('d-none');
+
+    window.scrollTo({
+        top: 0
+    })
+
+}
+
+const limpiarTodo = () => {
+    FormClientes.reset();
+    BtnGuardar.classList.remove('d-none');
+    BtnModificar.classList.add('d-none');
+
+}
+
+const ModificarCliente = async (event) => {
+    event.preventDefault(),
+    BtnModificar.disabled = true;
+
+    if (!validarFormulario(FormClientes, [''])) {
+        Swal.fire({
+                position: "center",
+                icon: "success",
+                title: "Exito",
+                text: mensaje,
+                showConfirmButton: false,
+                timer: 3000,
+            });
+            BtnGuardar.disabled = false;        
+    }
+
+    const body = new FormData(FormClientes);
+
+    const url = '/app03_jemg/clientes/modificarCliente';
+    const config = {
+        method: 'POST',
+        body
+    }
+
+    try {
+        
+        const respuesta = await fetch(url, config);
+        const datos = await respuesta.json();
+        const { codigo, mensaje } = datos
+
+        if (codigo === 1) {
+            Swal.fire({
+                position: "center",
+                icon: "success",
+                title: "Exito",
+                text: mensaje,
+                showConfirmButton: false,
+                timer: 3000,
+            });
+
+            limpiarTodo();
+            BuscarClientes();
+
+        } else {
+            Swal.fire({
+                position: "center",
+                icon: "Info",
+                title: "Error",
+                text: mensaje,
+                showConfirmButton: false,
+                timer: 3000,
+            });
+            return;
+        }
+
+    } catch (error) {
+        console.log(error);
+        
+    }
 }
 
 
 //Eventos
 BuscarCliente();
-//datatable.on('click', 'eliminar' EliminarClientes);
-//datatable.on('click', 'modificar' llenarClientes);
+//datatable.on('click', '.eliminar' EliminarClientes);
+datatable.on('click', '.modificar', llenarFormulario);
 validarTelefono.addEventListener('change', validacionTelefono);
 validarNit.addEventListener('change', EsValidoNit);
 
 //guardar
 FormClientes.addEventListener('submit', GuardarCliente)
+
+//brn limpiar
+BtnLimpiar.addEventListener('click', limpiarTodo);
+BtnModificar.addEventListener('click', ModificarCliente);
+
+
+

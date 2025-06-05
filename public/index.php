@@ -17,6 +17,7 @@ $router->get('/', [AppController::class,'index']);
 $router->get('/index', [ClienteController::class,'renderizarPagina']);
 $router->post('/clientes/guardarCliente', [ClienteController::class,'guardarCliente']);
 $router->get('/clientes/buscarCliente', [ClienteController::class,'buscarCliente']);
+$router->post('/clientes/modificarCliente', [ClienteController::class,'modificarCliente']);
 
 // Comprueba y valida las rutas, que existan y les asigna las funciones del Controlador
 $router->comprobarRutas();
