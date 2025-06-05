@@ -336,24 +336,72 @@ const EliminarCliente = async (e) => {
     const idCliente = e.currentTarget.dataset.id
 
     const AlertaConfirmarEliminar = await Swal.fire({
+        position: "center",
+        icon: "info",
+        title: "¿Desea ejecutar esta acción?",
+        text: "Usted eliminara un cliente",
+        showConfirmButton: true,
+        confirmButtonText: "Si",
+        confirmButtonColor: "red",
+        cancelButtonText: "Cancelar",
+        showCancelButton: true
+    });
 
-    })
-}
+    if (!AlertaConfirmarEliminar.isConfirmed) return;
+
+    // Preparamos el body para POST
+    const body = new URLSearchParams();
+    body.append('cliente_id', idCliente);
+
+    try {
+        const respuesta = await fetch('/app03_jemg/clientes/EliminarCliente', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body
+        });
+
+        const datos = await respuesta.json();
+        const { codigo, mensaje } = datos;
+
+        if (codigo === 1) {
+            await Swal.fire({
+                position: "center",
+                icon: "success",
+                title: "Éxito",
+                text: mensaje
+            });
+            BuscarCliente();
+        } else {
+            await Swal.fire({
+                position: "center",
+                icon: "info",
+                title: "Error",
+                text: mensaje,
+                showConfirmButton: false,
+                timer: 1000
+            });
+        }
+
+    } catch (error) {
+        console.log(error);
+    }
+};
 
 
 //Eventos
 BuscarCliente();
-//datatable.on('click', '.eliminar' EliminarClientes);
-datatable.on('click', '.modificar', llenarFormulario);
 validarTelefono.addEventListener('change', validacionTelefono);
 validarNit.addEventListener('change', EsValidoNit);
 
 //guardar
 FormClientes.addEventListener('submit', GuardarCliente)
 
-//brn limpiar
+//btn limpiar
 BtnLimpiar.addEventListener('click', limpiarTodo);
 BtnModificar.addEventListener('click', ModificarCliente);
 
+//datatable
+datatable.on('click', '.eliminar', EliminarCliente);
+datatable.on('click', '.modificar', llenarFormulario);
 
 

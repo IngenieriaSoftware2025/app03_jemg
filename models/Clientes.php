@@ -38,4 +38,5 @@ class Clientes extends ActiveRecord {
         $this->cliente_correo = $cliente['cliente_correo'] ?? '';
         $this->cliente_situacion = $cliente['cliente_situacion'] ?? 1;
     }
+
 }
