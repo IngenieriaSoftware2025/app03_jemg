@@ -9,7 +9,7 @@ class Usuarios extends ActiveRecord {
     // Crea las propiedades de la clase
     public static $tabla = 'usuarios';
     public static $idTabla = 'usuario_id';
-    public static $columnasDB = 
+    public static $columnasDB =  
     [
         'usuario_nom1',
         'usuario_nom2',

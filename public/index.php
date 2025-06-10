@@ -8,6 +8,7 @@ use Controllers\AppController;
 //impar la clase ClienteController
 use Controllers\ClienteController;
 use Controllers\MarcaController;
+use Controllers\UsuarioController;
 
 $router = new Router();
 $router->setBaseURL('/' . $_ENV['APP_NAME']);
@@ -27,6 +28,13 @@ $router->post('/marcas/guardarMarca', [MarcaController::class,'guardarMarca']);
 $router->get('/marcas/buscarMarca', [MarcaController::class,'buscarMarca']);
 $router->post('/marcas/modificarMarca', [MarcaController::class,'modificarMarca']);
 $router->post('/marcas/EliminarMarca', [MarcaController::class,'EliminarMarca']);
+
+//rutas para usuarios
+$router->get('/usuarios/index', [UsuarioController::class,'renderizarPagina']);
+$router->post('/usuarios/guardarUsuario', [UsuarioController::class,'guardarUsuario']);
+$router->get('/usuarios/buscarUsuario', [UsuarioController::class,'buscarUsuario']);
+$router->post('/usuarios/modificarUsuario', [UsuarioController::class,'modificarUsuario']);
+$router->post('/usuarios/EliminarUsuario', [UsuarioController::class,'EliminarUsuario']);
 
 // Comprueba y valida las rutas, que existan y les asigna las funciones del Controlador
 $router->comprobarRutas();
