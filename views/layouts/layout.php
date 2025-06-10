@@ -26,6 +26,10 @@
                     <li class="nav-item">
                         <a class="nav-link" aria-current="page" href="/app03_jemg/"><i class="bi bi-house-fill me-2"></i>Inicio</a>
                     </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link" aria-current="page" href="/app03_jemg/login"><i class="bi bi-door-open me-2"></i>Login</a>
+                    </li>
   
                     <div class="nav-item dropdown " >
                         <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
@@ -38,11 +42,11 @@
                             </li>
 
                             <li>
-                                <a class="dropdown-item nav-link text-white " href="/app03_jemg/marcas/index"><i class="ms-lg-0 ms-2 bi bi-plus-circle me-2"></i><i class="bi bi-person-add"></i> Crear Marcas</a>
+                                <a class="dropdown-item nav-link text-white " href="/app03_jemg/marcas/index"><i class="ms-lg-0 ms-2 bi bi-plus-circle me-2"></i><i class="bi bi-phone"></i> Crear Marcas</a>
                             </li>
 
                             <li>
-                                <a class="dropdown-item nav-link text-white " href="/app03_jemg/usuarios/index"><i class="ms-lg-0 ms-2 bi bi-plus-circle me-2"></i><i class="bi bi-person-add"></i> Crear Usuarios</a>
+                                <a class="dropdown-item nav-link text-white " href="/app03_jemg/usuarios/index"><i class="ms-lg-0 ms-2 bi bi-plus-circle me-2"></i><i class="bi bi-person-gear"></i> Crear Usuarios</a>
                             </li>
 
                             

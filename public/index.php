@@ -9,11 +9,15 @@ use Controllers\AppController;
 use Controllers\ClienteController;
 use Controllers\MarcaController;
 use Controllers\UsuarioController;
+use Controllers\LoginController;
 
 $router = new Router();
 $router->setBaseURL('/' . $_ENV['APP_NAME']);
 
 $router->get('/', [AppController::class,'index']);
+
+//RUTAS LOGIN
+$router->get('/login', [LoginController::class,'renderizarPagina']);
 
 // get obtiene la vista de la apgina
 $router->get('/clientes/index', [ClienteController::class,'renderizarPagina']);
