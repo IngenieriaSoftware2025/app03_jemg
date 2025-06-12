@@ -213,4 +213,27 @@ class MarcaController extends ActiveRecord
         }
     }
 
+    public static function eliminarModelo()
+    {
+        try {
+            $id = filter_var($_POST['modelo_id'], FILTER_SANITIZE_NUMBER_INT);
+            $consulta = "UPDATE modelos SET modelo_situacion = 0 WHERE modelo_id = $id";
+            self::SQL($consulta);
+            
+            http_response_code(200);
+            echo json_encode([
+                'codigo' => 1,
+                'mensaje' => 'Éxito al eliminar modelo'
+            ]);
+
+        } catch (Exception $e) {
+            http_response_code(400);
+            echo json_encode([
+                'codigo' => 0,
+                'mensaje' => 'Error al eliminar modelo',
+                'detalle' => $e->getMessage()
+            ]);
+        }
+    }
+
 }

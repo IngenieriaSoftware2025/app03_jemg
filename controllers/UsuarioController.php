@@ -263,9 +263,7 @@ class UsuarioController extends ActiveRecord
         getHeadersApi();
         
         try {
-            $sql = "SELECT usuario_id, usuario_nom1, usuario_nom2, usuario_ape1, usuario_ape2, 
-                        usuario_tel, usuario_direc, usuario_dpi, usuario_correo, 
-                        usuario_fecha_creacion, usuario_fotografia, usuario_situacion 
+            $sql = "SELECT *
                     FROM usuarios WHERE usuario_situacion = 1";
             $data = self::fetchArray($sql);
 

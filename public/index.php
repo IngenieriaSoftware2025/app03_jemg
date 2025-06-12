@@ -10,6 +10,7 @@ use Controllers\ClienteController;
 use Controllers\MarcaController;
 use Controllers\UsuarioController;
 use Controllers\LoginController;
+use Controllers\ModeloController;
 
 $router = new Router();
 $router->setBaseURL('/' . $_ENV['APP_NAME']);
@@ -39,6 +40,15 @@ $router->post('/usuarios/guardarUsuario', [UsuarioController::class,'guardarUsua
 $router->get('/usuarios/buscarUsuario', [UsuarioController::class,'buscarUsuario']);
 $router->post('/usuarios/modificarUsuario', [UsuarioController::class,'modificarUsuario']);
 $router->post('/usuarios/EliminarUsuario', [UsuarioController::class,'EliminarUsuario']);
+
+//rutas para modelos
+$router->get('/modelos/index', [ModeloController::class,'renderizarPagina']);
+$router->get('/modelos/obtenerMarcas', [ModeloController::class,'obtenerMarcas']);
+$router->post('/modelos/guardarModelo', [ModeloController::class,'guardarModelo']);
+$router->get('/modelos/buscarModelo', [ModeloController::class,'buscarModelo']);
+$router->post('/modelos/modificarModelo', [ModeloController::class,'modificarModelo']);
+$router->post('/modelos/EliminarModelo', [ModeloController::class,'EliminarModelo']);
+
 
 // Comprueba y valida las rutas, que existan y les asigna las funciones del Controlador
 $router->comprobarRutas();

@@ -6,7 +6,7 @@
     <script src="build/js/app.js"></script>
     <link rel="shortcut icon" href="<?= asset('images/cit.png') ?>" type="image/x-icon">
     <link rel="stylesheet" href="<?= asset('build/styles.css') ?>">
-    <title>DemoApp</title>
+    <title>Login - 2025</title>
 </head>
 <body>
 
