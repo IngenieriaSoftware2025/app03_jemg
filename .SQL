@@ -56,7 +56,6 @@ CREATE TABLE modelos (
     FOREIGN KEY (marca_id) REFERENCES marcas(marca_id)
 );
 
---------------------------------------------------------------------------------------------------------------------------------------------
 
 -- TABLA DE SERVICIOS DE REPARACIÓN
 CREATE TABLE servicios (
@@ -67,26 +66,24 @@ CREATE TABLE servicios (
     servicio_tiempo_estimado INT, -- en horas
     servicio_situacion SMALLINT DEFAULT 1
 );
+--------------------------------------------------------------------------------------------------------------------------------------------
 
--- TABLA DE INVENTARIO
 CREATE TABLE inventario (
     inventario_id SERIAL PRIMARY KEY,
     modelo_id INT NOT NULL,
-    inventario_stock_actual INT NOT NULL DEFAULT 0,
-    inventario_stock_minimo INT NOT NULL DEFAULT 5,
+    inventario_stock_actual INT NOT NULL,
     inventario_precio_venta DECIMAL(10,2) NOT NULL,
     inventario_precio_compra DECIMAL(10,2),
-    inventario_fecha_actualizacion DATETIME YEAR TO SECOND DEFAULT CURRENT,
+    inventario_fecha_actualizacion DATETIME YEAR TO SECOND,
     inventario_situacion SMALLINT DEFAULT 1,
     FOREIGN KEY (modelo_id) REFERENCES modelos(modelo_id)
 );
 
--- TABLA DE VENTAS
 CREATE TABLE ventas (
     venta_id SERIAL PRIMARY KEY,
     cliente_id INT NOT NULL,
     usuario_id INT NOT NULL,
-    venta_fecha DATETIME YEAR TO SECOND DEFAULT CURRENT,
+    venta_fecha DATETIME YEAR TO SECOND,
     venta_total DECIMAL(10,2) NOT NULL,
     venta_tipo VARCHAR(20) DEFAULT 'VENTA', -- 'VENTA' o 'REPARACION'
     venta_situacion SMALLINT DEFAULT 1,

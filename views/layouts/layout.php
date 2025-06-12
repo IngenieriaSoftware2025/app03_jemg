@@ -53,6 +53,10 @@
                                 <a class="dropdown-item nav-link text-white " href="/app03_jemg/modelos/index"><i class="ms-lg-0 ms-2 bi bi-plus-circle me-2"></i><i class="bi bi-phone-fill"></i>   Crear Modelos</a>
                             </li>
 
+                            <li>
+                                <a class="dropdown-item nav-link text-white " href="/app03_jemg/servicios/index"><i class="ms-lg-0 ms-2 bi bi-plus-circle me-2"></i><i class="bi bi-tools"></i>   Crear Servicios</a>
+                            </li>
+
                     
                         
                         </ul>

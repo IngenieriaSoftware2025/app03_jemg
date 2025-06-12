@@ -60,11 +60,46 @@
                             </div>
                         </div>
 
+                        <!-- ROL Y PUESTO - NUEVOS CAMPOS -->
+                        <div class="row mb-3 justify-content-center">
+                            <div class="col-lg-4">
+                                <label for="usuario_rol" class="form-label">Rol</label>
+                                <select class="form-select" id="usuario_rol" name="usuario_rol">
+                                    <option value="">Seleccione un rol</option>
+                                    <option value="ADMINISTRADOR">Administrador</option>
+                                    <option value="EMPLEADO">Empleado</option>
+                                </select>
+                            </div>
+                            <div class="col-lg-4">
+                                <label for="usuario_puesto" class="form-label">Puesto</label>
+                                <select class="form-select" id="usuario_puesto" name="usuario_puesto">
+                                    <option value="">Seleccione un puesto</option>
+                                    <option value="GERENTE_GENERAL">Gerente General</option>
+                                    <option value="GERENTE_VENTAS">Gerente de Ventas</option>
+                                    <option value="GERENTE_TECNICO">Gerente Técnico</option>
+                                    <option value="SUPERVISOR">Supervisor</option>
+                                    <option value="VENDEDOR">Vendedor</option>
+                                    <option value="TECNICO">Técnico</option>
+                                    <option value="CAJERO">Cajero</option>
+                                    <option value="RECEPCIONISTA">Recepcionista</option>
+                                </select>
+                            </div>
+                            <div class="col-lg-4">
+                                <label for="usuario_estado" class="form-label">Estado</label>
+                                <select class="form-select" id="usuario_estado" name="usuario_estado">
+                                    <option value="">Seleccione un estado</option>
+                                    <option value="ACTIVO">Activo</option>
+                                    <option value="INACTIVO">Inactivo</option>
+                                    <option value="SUSPENDIDO">Suspendido</option>
+                                </select>
+                            </div>
+                        </div>
+
                         <!-- Contraseña -->
                         <div class="row mb-3 justify-content-center">
                             <div class="col-lg-6">
-                                <label for="usuario_contra" class="form-label">Contraseña</label>
-                                <input type="password" class="form-control" id="usuario_contra" name="usuario_contra" placeholder="Ingrese la contraseña">
+                                <label for="usuario_contrasena" class="form-label">Contraseña</label>
+                                <input type="password" class="form-control" id="usuario_contrasena" name="usuario_contrasena" placeholder="Ingrese la contraseña">
                             </div>
                             <div class="col-lg-6">
                                 <label for="confirmar_contra" class="form-label">Confirmar Contraseña</label>
@@ -72,8 +107,12 @@
                             </div>
                         </div>
 
-                        <!-- Fotografía -->
+                        <!-- Fecha de Contratación y Fotografía -->
                         <div class="row mb-3 justify-content-center">
+                            <div class="col-lg-6">
+                                <label for="usuario_fecha_contra" class="form-label">Fecha de Contratación</label>
+                                <input type="datetime-local" class="form-control" id="usuario_fecha_contra" name="usuario_fecha_contra">
+                            </div>
                             <div class="col-lg-6">
                                 <label for="usuario_fotografia" class="form-label">Fotografía de Perfil</label>
                                 <input type="file" class="form-control" id="usuario_fotografia" name="usuario_fotografia" accept="image/*">
