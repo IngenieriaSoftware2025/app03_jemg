@@ -12,6 +12,7 @@ use Controllers\UsuarioController;
 use Controllers\LoginController;
 use Controllers\ModeloController;
 use Controllers\ServicioController;
+use Controllers\InventarioController;
 
 $router = new Router();
 $router->setBaseURL('/' . $_ENV['APP_NAME']);
@@ -58,6 +59,15 @@ $router->post('/servicios/guardarServicio', [ServicioController::class,'guardarS
 $router->get('/servicios/buscarServicio', [ServicioController::class,'buscarServicio']);
 $router->post('/servicios/modificarServicio', [ServicioController::class,'modificarServicio']);
 $router->post('/servicios/eliminarServicio', [ServicioController::class,'eliminarServicio']);
+
+
+//rutas para inventario
+$router->get('/inventario/index', [InventarioController::class,'renderizarPagina']);
+$router->get('/inventario/obtenerModelos', [InventarioController::class,'obtenerModelos']);
+$router->post('/inventario/guardarInventario', [InventarioController::class,'guardarInventario']);
+$router->get('/inventario/buscarInventario', [InventarioController::class,'buscarInventario']);
+$router->post('/inventario/modificarInventario', [InventarioController::class,'modificarInventario']);
+$router->post('/inventario/eliminarInventario', [InventarioController::class,'eliminarInventario']);
 
 // Comprueba y valida las rutas, que existan y les asigna las funciones del Controlador
 $router->comprobarRutas();

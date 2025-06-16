@@ -57,6 +57,15 @@
                                 <a class="dropdown-item nav-link text-white " href="/app03_jemg/servicios/index"><i class="ms-lg-0 ms-2 bi bi-plus-circle me-2"></i><i class="bi bi-tools"></i>   Crear Servicios</a>
                             </li>
 
+                            <li>
+                                <a class="dropdown-item nav-link text-white " href="/app03_jemg/inventario/index"><i class="ms-lg-0 ms-2 bi bi-plus-circle me-2"></i><i class="bi bi-clipboard"></i>
+   Crear Inventarios</a>
+                            </li>
+
+                            <li>
+                                <a class="dropdown-item nav-link text-white " href="/app03_jemg/servicios/index"><i class="ms-lg-0 ms-2 bi bi-plus-circle me-2"></i><i class="bi bi-pencil-fill"></i>   Crear Permisos</a>
+                            </li>
+
                     
                         
                         </ul>
