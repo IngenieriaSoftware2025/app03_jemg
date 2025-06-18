@@ -37,7 +37,7 @@ class UsuarioController extends ActiveRecord
         }
 
         // Validación del segundo nombre (opcional)
-        if (!empty($_POST['usuario_nom2'])) {
+        if (!empty($_POST['usuario_nom2']) && trim($_POST['usuario_nom2']) !== '') {
             $_POST['usuario_nom2'] = ucwords(strtolower(trim(htmlspecialchars($_POST['usuario_nom2']))));
             $cantidad_nom2 = strlen($_POST['usuario_nom2']);
 
@@ -53,6 +53,8 @@ class UsuarioController extends ActiveRecord
             $_POST['usuario_nom2'] = null;
         }
 
+        
+
         // Validación del primer apellido (obligatorio)
         $_POST['usuario_ape1'] = ucwords(strtolower(trim(htmlspecialchars($_POST['usuario_ape1']))));
         $cantidad_ape1 = strlen($_POST['usuario_ape1']);
@@ -67,7 +69,7 @@ class UsuarioController extends ActiveRecord
         }
 
         // Validación del segundo apellido (opcional)
-        if (!empty($_POST['usuario_ape2'])) {
+        if (!empty($_POST['usuario_ape2']) && trim($_POST['usuario_ape2']) !== '') {
             $_POST['usuario_ape2'] = ucwords(strtolower(trim(htmlspecialchars($_POST['usuario_ape2']))));
             $cantidad_ape2 = strlen($_POST['usuario_ape2']);
 
@@ -390,9 +392,8 @@ class UsuarioController extends ActiveRecord
             return;
         }
 
-        // Validación del segundo nombre (opcional)
-        if (!empty($_POST['usuario_nom2'])) {
-            $_POST['usuario_nom2'] = htmlspecialchars($_POST['usuario_nom2']);
+        if (!empty($_POST['usuario_nom2']) && trim($_POST['usuario_nom2']) !== '') {
+            $_POST['usuario_nom2'] = ucwords(strtolower(trim(htmlspecialchars($_POST['usuario_nom2']))));
             $cantidad_nom2 = strlen($_POST['usuario_nom2']);
 
             if ($cantidad_nom2 < 2) {
@@ -420,9 +421,9 @@ class UsuarioController extends ActiveRecord
             return;
         }
 
-        // Validación del segundo apellido (opcional)
-        if (!empty($_POST['usuario_ape2'])) {
-            $_POST['usuario_ape2'] = htmlspecialchars($_POST['usuario_ape2']);
+        //apellido opcional
+        if (!empty($_POST['usuario_ape2']) && trim($_POST['usuario_ape2']) !== '') {
+            $_POST['usuario_ape2'] = ucwords(strtolower(trim(htmlspecialchars($_POST['usuario_ape2']))));
             $cantidad_ape2 = strlen($_POST['usuario_ape2']);
 
             if ($cantidad_ape2 < 2) {

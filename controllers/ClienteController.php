@@ -48,40 +48,6 @@ class ClienteController extends ActiveRecord
             return;
         }
 
-        // Validación del segundo nombre (opcional)
-        if (!empty($_POST['usuario_nom2']) && trim($_POST['usuario_nom2']) !== '') {
-            $_POST['usuario_nom2'] = ucwords(strtolower(trim(htmlspecialchars($_POST['usuario_nom2']))));
-            $cantidad_nom2 = strlen($_POST['usuario_nom2']);
-
-            if ($cantidad_nom2 < 2) {
-                http_response_code(400);
-                echo json_encode([
-                    'codigo' => 0,
-                    'mensaje' => 'La cantidad de digitos que debe de contener el segundo nombre debe de ser mayor a dos'
-                ]);
-                return;
-            }
-        } else {
-            $_POST['usuario_nom2'] = null;
-        }
-
-        // Validación del segundo apellido (opcional)
-        if (!empty($_POST['usuario_ape2']) && trim($_POST['usuario_ape2']) !== '') {
-            $_POST['usuario_ape2'] = ucwords(strtolower(trim(htmlspecialchars($_POST['usuario_ape2']))));
-            $cantidad_ape2 = strlen($_POST['usuario_ape2']);
-
-            if ($cantidad_ape2 < 2) {
-                http_response_code(400);
-                echo json_encode([
-                    'codigo' => 0,
-                    'mensaje' => 'La cantidad de digitos que debe de contener el segundo apellido debe de ser mayor a dos'
-                ]);
-                return;
-            }
-        } else {
-            $_POST['usuario_ape2'] = null;
-        }
-
         $_POST['cliente_nit'] = filter_var($_POST['cliente_nit'], FILTER_SANITIZE_NUMBER_INT);
 
         $_POST['cliente_telefono'] = filter_var($_POST['cliente_telefono'], FILTER_SANITIZE_NUMBER_INT);
@@ -102,6 +68,7 @@ class ClienteController extends ActiveRecord
             'codigo' => 0,
             'mensaje' => 'El correo electronico no es valido'
         ]);
+        return;
        }
 
         //se envian los datos a guardar despues de sanitizar
@@ -200,40 +167,6 @@ class ClienteController extends ActiveRecord
                 'mensaje' => 'Nombre debe de tener mas de 1 caracteres'
             ]);
             return;
-        }
-
-        // Validación del segundo nombre (opcional)
-        if (!empty($_POST['usuario_nom2']) && trim($_POST['usuario_nom2']) !== '') {
-            $_POST['usuario_nom2'] = ucwords(strtolower(trim(htmlspecialchars($_POST['usuario_nom2']))));
-            $cantidad_nom2 = strlen($_POST['usuario_nom2']);
-
-            if ($cantidad_nom2 < 2) {
-                http_response_code(400);
-                echo json_encode([
-                    'codigo' => 0,
-                    'mensaje' => 'La cantidad de digitos que debe de contener el segundo nombre debe de ser mayor a dos'
-                ]);
-                return;
-            }
-        } else {
-            $_POST['usuario_nom2'] = null;
-        }
-
-        // Validación del segundo apellido (opcional)
-        if (!empty($_POST['usuario_ape2']) && trim($_POST['usuario_ape2']) !== '') {
-            $_POST['usuario_ape2'] = ucwords(strtolower(trim(htmlspecialchars($_POST['usuario_ape2']))));
-            $cantidad_ape2 = strlen($_POST['usuario_ape2']);
-
-            if ($cantidad_ape2 < 2) {
-                http_response_code(400);
-                echo json_encode([
-                    'codigo' => 0,
-                    'mensaje' => 'La cantidad de digitos que debe de contener el segundo apellido debe de ser mayor a dos'
-                ]);
-                return;
-            }
-        } else {
-            $_POST['usuario_ape2'] = null;
         }
 
         $_POST['cliente_nit'] = filter_var($_POST['cliente_nit'], FILTER_SANITIZE_NUMBER_INT);
