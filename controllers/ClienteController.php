@@ -34,7 +34,6 @@ class ClienteController extends ActiveRecord
             return;
         }
 
-
         //saniticacion de apellido y validaccion con capital
         $_POST['cliente_apellidos'] = ucwords(strtolower(trim(htmlspecialchars($_POST['cliente_apellidos']))));
         $cantidad_apellido = strlen($_POST['cliente_apellidos']);
@@ -43,7 +42,7 @@ class ClienteController extends ActiveRecord
             http_response_code(400);
             echo json_encode([
                 'codigo' => 0,
-                'mensaje' => 'Nombre debe de tener mas de 1 caracteres'
+                'mensaje' => 'Apellido debe de tener mas de 1 caracteres'
             ]);
             return;
         }
@@ -62,14 +61,41 @@ class ClienteController extends ActiveRecord
 
         $_POST['cliente_correo'] = filter_var($_POST['cliente_correo'], FILTER_SANITIZE_EMAIL);
 
-       if (!filter_var($_POST['cliente_correo'], FILTER_VALIDATE_EMAIL)){
-        http_response_code(400);
-        echo json_encode([
-            'codigo' => 0,
-            'mensaje' => 'El correo electronico no es valido'
-        ]);
-        return;
-       }
+        if (!filter_var($_POST['cliente_correo'], FILTER_VALIDATE_EMAIL)){
+            http_response_code(400);
+            echo json_encode([
+                'codigo' => 0,
+                'mensaje' => 'El correo electronico no es valido'
+            ]);
+            return;
+        }
+
+        // NUEVA VALIDACIÓN: Verificar NIT único
+        try {
+            $sql = "SELECT COUNT(*) as total FROM clientes 
+                    WHERE cliente_nit = " . self::$db->quote($_POST['cliente_nit']) . "
+                    AND cliente_situacion = 1";
+            
+            $resultado = self::fetchFirst($sql);
+            
+            if ($resultado && $resultado['total'] > 0) {
+                http_response_code(400);
+                echo json_encode([
+                    'codigo' => 0,
+                    'mensaje' => 'Ya existe un cliente registrado con ese NIT'
+                ]);
+                return;
+            }
+            
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'codigo' => 0,
+                'mensaje' => 'Error al verificar NIT existente',
+                'detalle' => $e->getMessage()
+            ]);
+            return;
+        }
 
         //se envian los datos a guardar despues de sanitizar
         try {
@@ -96,7 +122,7 @@ class ClienteController extends ActiveRecord
             http_response_code(400);
             echo json_encode([
                 'codigo' => 0,
-                'mensaje' => 'Erro al guardar cliente',
+                'mensaje' => 'Error al guardar cliente',
                 'detalle' => $e->getMessage()
             ]);
             return;
@@ -137,7 +163,8 @@ class ClienteController extends ActiveRecord
         }
     }
 
-    public static function modificarCliente(){
+    public static function modificarCliente()
+    {
         getHeadersApi();
 
         $id = $_POST['cliente_id'];
@@ -155,7 +182,6 @@ class ClienteController extends ActiveRecord
             return;
         }
 
-
         //saniticacion de apellido y validaccion con capital
         $_POST['cliente_apellidos'] = ucwords(strtolower(trim(htmlspecialchars($_POST['cliente_apellidos']))));
         $cantidad_apellido = strlen($_POST['cliente_apellidos']);
@@ -164,7 +190,7 @@ class ClienteController extends ActiveRecord
             http_response_code(400);
             echo json_encode([
                 'codigo' => 0,
-                'mensaje' => 'Nombre debe de tener mas de 1 caracteres'
+                'mensaje' => 'Apellido debe de tener mas de 1 caracteres'
             ]);
             return;
         }
@@ -183,18 +209,56 @@ class ClienteController extends ActiveRecord
 
         $_POST['cliente_correo'] = filter_var($_POST['cliente_correo'], FILTER_SANITIZE_EMAIL);
 
-       if (!filter_var($_POST['cliente_correo'], FILTER_VALIDATE_EMAIL)){
-        http_response_code(400);
-        echo json_encode([
-            'codigo' => 0,
-            'mensaje' => 'El correo electronico no es valido'
-        ]);
-        return;
-       }
+        if (!filter_var($_POST['cliente_correo'], FILTER_VALIDATE_EMAIL)){
+            http_response_code(400);
+            echo json_encode([
+                'codigo' => 0,
+                'mensaje' => 'El correo electronico no es valido'
+            ]);
+            return;
+        }
 
-       try {
+        // NUEVA VALIDACIÓN: Verificar NIT único excluyendo cliente actual
+        try {
+            $sql = "SELECT COUNT(*) as total FROM clientes 
+                    WHERE cliente_nit = " . self::$db->quote($_POST['cliente_nit']) . "
+                    AND cliente_id != " . self::$db->quote($id) . "
+                    AND cliente_situacion = 1";
+            
+            $resultado = self::fetchFirst($sql);
+            
+            if ($resultado && $resultado['total'] > 0) {
+                http_response_code(400);
+                echo json_encode([
+                    'codigo' => 0,
+                    'mensaje' => 'Ya existe otro cliente registrado con ese NIT'
+                ]);
+                return;
+            }
+            
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'codigo' => 0,
+                'mensaje' => 'Error al verificar NIT existente',
+                'detalle' => $e->getMessage()
+            ]);
+            return;
+        }
+
+        try {
             $data = Clientes::find($id);
-            $data-> sincronizar(
+            
+            if (!$data) {
+                http_response_code(404);
+                echo json_encode([
+                    'codigo' => 0,
+                    'mensaje' => 'Cliente no encontrado'
+                ]);
+                return;
+            }
+            
+            $data->sincronizar(
                 [
                     'cliente_nombres' => $_POST['cliente_nombres'],
                     'cliente_apellidos' => $_POST['cliente_apellidos'],
@@ -208,17 +272,16 @@ class ClienteController extends ActiveRecord
             http_response_code(200);
             echo json_encode([
                 'codigo' => 1,
-                'mensaje' => 'La informacion del clientes ha sido modificada exitosamente'
+                'mensaje' => 'La informacion del cliente ha sido modificada exitosamente'
             ]);
-       } catch (Exception $e) {
+        } catch (Exception $e) {
             http_response_code(400);
             echo json_encode([
                 'codigo' => 0,
-                'mensaje' => 'Error al modificar',
+                'mensaje' => 'Error al modificar cliente',
                 'detalle' => $e->getMessage(),
             ]);
-       }
-
+        }
     }
 
     public static function eliminarCliente()

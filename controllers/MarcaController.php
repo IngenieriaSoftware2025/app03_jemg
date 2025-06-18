@@ -123,9 +123,7 @@ class MarcaController extends ActiveRecord
 
         $id = $_POST['marca_id'];
 
-        // Sanitización de nombre de marca y validación con capital
         $_POST['marca_nombre'] = ucwords(strtolower(trim(htmlspecialchars($_POST['marca_nombre']))));
-
         $cantidad_nombre = strlen($_POST['marca_nombre']);
 
         if ($cantidad_nombre < 2) {
@@ -137,25 +135,27 @@ class MarcaController extends ActiveRecord
             return;
         }
 
-        // Sanitización de descripción (opcional)
+
         $_POST['marca_descripcion'] = trim(htmlspecialchars($_POST['marca_descripcion'] ?? ''));
 
-        // Validar que el nombre de la marca no exista ya en otra marca (evitar duplicados)
+
         try {
-            $marcaExistente = Marcas::where('marca_nombre', $_POST['marca_nombre']);
-            if (!empty($marcaExistente)) {
-                // Verificar que no sea la misma marca que se está editando
-                foreach ($marcaExistente as $marca) {
-                    if ($marca->marca_id != $id) {
-                        http_response_code(400);
-                        echo json_encode([
-                            'codigo' => 0,
-                            'mensaje' => 'Ya existe otra marca con ese nombre'
-                        ]);
-                        return;
-                    }
-                }
+            $sql = "SELECT COUNT(*) as total FROM marcas 
+                    WHERE marca_nombre = " . self::$db->quote($_POST['marca_nombre']) . "
+                    AND marca_id != " . self::$db->quote($id) . "
+                    AND marca_situacion = 1";
+            
+            $resultado = self::fetchFirst($sql);
+            
+            if ($resultado && $resultado['total'] > 0) {
+                http_response_code(400);
+                echo json_encode([
+                    'codigo' => 0,
+                    'mensaje' => 'Ya existe otra marca con ese nombre'
+                ]);
+                return;
             }
+            
         } catch (Exception $e) {
             http_response_code(500);
             echo json_encode([
@@ -168,11 +168,22 @@ class MarcaController extends ActiveRecord
 
         try {
             $data = Marcas::find($id);
+            
+            if (!$data) {
+                http_response_code(404);
+                echo json_encode([
+                    'codigo' => 0,
+                    'mensaje' => 'Marca no encontrada'
+                ]);
+                return;
+            }
+            
             $data->sincronizar([
                 'marca_nombre' => $_POST['marca_nombre'],
                 'marca_descripcion' => $_POST['marca_descripcion'],
                 'marca_situacion' => 1
             ]);
+            
             $data->actualizar();
             
             http_response_code(200);
@@ -180,12 +191,13 @@ class MarcaController extends ActiveRecord
                 'codigo' => 1,
                 'mensaje' => 'La información de la marca ha sido modificada exitosamente'
             ]);
+            
         } catch (Exception $e) {
             http_response_code(400);
             echo json_encode([
                 'codigo' => 0,
                 'mensaje' => 'Error al modificar marca',
-                'detalle' => $e->getMessage(),
+                'detalle' => $e->getMessage()
             ]);
         }
     }
@@ -208,29 +220,6 @@ class MarcaController extends ActiveRecord
             echo json_encode([
                 'codigo' => 0,
                 'mensaje' => 'Error al eliminar marca',
-                'detalle' => $e->getMessage()
-            ]);
-        }
-    }
-
-    public static function eliminarModelo()
-    {
-        try {
-            $id = filter_var($_POST['modelo_id'], FILTER_SANITIZE_NUMBER_INT);
-            $consulta = "UPDATE modelos SET modelo_situacion = 0 WHERE modelo_id = $id";
-            self::SQL($consulta);
-            
-            http_response_code(200);
-            echo json_encode([
-                'codigo' => 1,
-                'mensaje' => 'Éxito al eliminar modelo'
-            ]);
-
-        } catch (Exception $e) {
-            http_response_code(400);
-            echo json_encode([
-                'codigo' => 0,
-                'mensaje' => 'Error al eliminar modelo',
                 'detalle' => $e->getMessage()
             ]);
         }
