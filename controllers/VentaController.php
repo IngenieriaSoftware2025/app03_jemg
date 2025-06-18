@@ -83,7 +83,7 @@ class VentaController extends ActiveRecord
         }
     }
 
-    public static function guardarVenta()
+    public static function procesarVenta()
     {
         getHeadersApi();
 
@@ -97,6 +97,7 @@ class VentaController extends ActiveRecord
             return;
         }
 
+        // Decodificar productos del carrito
         $productos = json_decode($_POST['productos'], true);
         if (empty($productos)) {
             http_response_code(400);
@@ -123,7 +124,7 @@ class VentaController extends ActiveRecord
             return;
         }
 
-        // VALIDACIÓN Verificar que el cliente existe y está activo
+        // VALIDACIÓN 1: Verificar que el cliente existe y está activo
         try {
             $sql = "SELECT COUNT(*) as total FROM clientes 
                     WHERE cliente_id = " . self::$db->quote($_POST['cliente_id']) . "
@@ -150,7 +151,7 @@ class VentaController extends ActiveRecord
             return;
         }
 
-        // VALIDACIÓN Verificar stock disponible para todos los productos
+        // VALIDACIÓN 2: Verificar stock disponible para todos los productos
         foreach ($productos as $producto) {
             try {
                 $sql = "SELECT inventario_stock_actual FROM inventario 
@@ -227,7 +228,7 @@ class VentaController extends ActiveRecord
         }
     }
 
-    public static function buscarVenta()
+    public static function buscarVentas()
     {
         try {
             $sql = "SELECT v.venta_id, v.venta_fecha, v.venta_total, v.venta_tipo,
@@ -264,106 +265,14 @@ class VentaController extends ActiveRecord
         }
     }
 
-    public static function modificarVenta()
-    {
-        getHeadersApi();
-
-        $id = $_POST['venta_id'];
-
-        // Validaciones básicas de campos obligatorios
-        if (empty($_POST['cliente_id']) || empty($_POST['venta_total'])) {
-            http_response_code(400);
-            echo json_encode([
-                'codigo' => 0,
-                'mensaje' => 'Cliente y total son campos obligatorios'
-            ]);
-            return;
-        }
-
-        // Sanitización y validación de total
-        $_POST['venta_total'] = filter_var($_POST['venta_total'], FILTER_VALIDATE_FLOAT);
-
-        if ($_POST['venta_total'] <= 0) {
-            http_response_code(400);
-            echo json_encode([
-                'codigo' => 0,
-                'mensaje' => 'El total de la venta debe ser mayor a 0'
-            ]);
-            return;
-        }
-
-        // VALIDACIÓN: Verificar que el cliente existe y está activo
-        try {
-            $sql = "SELECT COUNT(*) as total FROM clientes 
-                    WHERE cliente_id = " . self::$db->quote($_POST['cliente_id']) . "
-                    AND cliente_situacion = 1";
-            
-            $resultado = self::fetchFirst($sql);
-            
-            if (!$resultado || $resultado['total'] == 0) {
-                http_response_code(400);
-                echo json_encode([
-                    'codigo' => 0,
-                    'mensaje' => 'El cliente seleccionado no existe o no está activo'
-                ]);
-                return;
-            }
-            
-        } catch (Exception $e) {
-            http_response_code(500);
-            echo json_encode([
-                'codigo' => 0,
-                'mensaje' => 'Error al verificar cliente existente',
-                'detalle' => $e->getMessage()
-            ]);
-            return;
-        }
-
-        try {
-            $data = Ventas::find($id);
-            
-            if (!$data) {
-                http_response_code(404);
-                echo json_encode([
-                    'codigo' => 0,
-                    'mensaje' => 'Venta no encontrada'
-                ]);
-                return;
-            }
-            
-            $data->sincronizar([
-                'cliente_id' => $_POST['cliente_id'],
-                'venta_total' => $_POST['venta_total'],
-                'venta_fecha' => date('Y-m-d H:i:s'), 
-                'venta_situacion' => 1
-            ]);
-            
-            $data->actualizar();
-
-            http_response_code(200);
-            echo json_encode([
-                'codigo' => 1,
-                'mensaje' => 'La venta ha sido modificada exitosamente'
-            ]);
-            
-        } catch (Exception $e) {
-            http_response_code(400);
-            echo json_encode([
-                'codigo' => 0,
-                'mensaje' => 'Error al modificar venta',
-                'detalle' => $e->getMessage()
-            ]);
-        }
-    }
-
-    public static function eliminarVenta()
+    public static function anularVenta()
     {
         getHeadersApi();
 
         $id = $_POST['venta_id'];
 
         try {
-            // Verificar que la venta existe antes de eliminar
+            // Obtener información de la venta antes de anular
             $venta = self::fetchFirst("SELECT * FROM ventas WHERE venta_id = " . self::$db->quote($id) . " AND venta_situacion = 1");
             
             if (!$venta) {
@@ -375,21 +284,21 @@ class VentaController extends ActiveRecord
                 return;
             }
 
-            // Eliminar venta 
+            // Anular venta (eliminación lógica)
             $sql = "UPDATE ventas SET venta_situacion = 0 WHERE venta_id = " . self::$db->quote($id);
             self::SQL($sql);
             
             http_response_code(200);
             echo json_encode([
                 'codigo' => 1,
-                'mensaje' => 'Venta eliminada exitosamente'
+                'mensaje' => 'Venta anulada exitosamente'
             ]);
 
         } catch (Exception $e) {
             http_response_code(400);
             echo json_encode([
                 'codigo' => 0,
-                'mensaje' => 'Error al eliminar venta',
+                'mensaje' => 'Error al anular venta',
                 'detalle' => $e->getMessage()
             ]);
         }
