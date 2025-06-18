@@ -14,7 +14,6 @@ class Modelos extends ActiveRecord {
         'marca_id',
         'modelo_nombre',
         'modelo_descripcion',
-        'modelo_especificaciones',
         'modelo_precio_referencia',
         'modelo_situacion'
     ];
@@ -24,7 +23,6 @@ class Modelos extends ActiveRecord {
     public $marca_id;
     public $modelo_nombre;
     public $modelo_descripcion;
-    public $modelo_especificaciones;
     public $modelo_precio_referencia;
     public $modelo_situacion;
     
@@ -34,7 +32,6 @@ class Modelos extends ActiveRecord {
         $this->marca_id = $modelo['marca_id'] ?? null;
         $this->modelo_nombre = $modelo['modelo_nombre'] ?? '';
         $this->modelo_descripcion = $modelo['modelo_descripcion'] ?? '';
-        $this->modelo_especificaciones = $modelo['modelo_especificaciones'] ?? '';
         $this->modelo_precio_referencia = $modelo['modelo_precio_referencia'] ?? 0.00;
         $this->modelo_situacion = $modelo['modelo_situacion'] ?? 1;
     }

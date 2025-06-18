@@ -9,7 +9,6 @@ use Model\Inventario;
 use Model\Modelos;
 use Model\Marcas;
 
-//C:\docker\app03_jemg\views\inventario\index.php
 class InventarioController extends ActiveRecord
 {
 
@@ -44,8 +43,9 @@ class InventarioController extends ActiveRecord
     public static function obtenerModelos()
     {
         try {
+            // CORRECCIÓN INFORMIX: Usar operador || en lugar de CONCAT()
             $sql = "SELECT m.modelo_id, m.modelo_nombre, ma.marca_nombre,
-                           CONCAT(ma.marca_nombre, ' - ', m.modelo_nombre) as modelo_completo
+                        (ma.marca_nombre || ' - ' || m.modelo_nombre) as modelo_completo
                     FROM modelos m 
                     JOIN marcas ma ON m.marca_id = ma.marca_id 
                     WHERE m.modelo_situacion = 1 AND ma.marca_situacion = 1 
@@ -72,7 +72,7 @@ class InventarioController extends ActiveRecord
     {
         getHeadersApi();
 
-        // Validaciones básicas
+        // Validaciones básicas de campos obligatorios
         if (empty($_POST['modelo_id'])) {
             http_response_code(400);
             echo json_encode([
@@ -82,7 +82,7 @@ class InventarioController extends ActiveRecord
             return;
         }
 
-        // Validación del stock
+        // Sanitización y validación de stock
         $_POST['inventario_stock_actual'] = filter_var($_POST['inventario_stock_actual'], FILTER_VALIDATE_INT);
 
         if ($_POST['inventario_stock_actual'] < 0) {
@@ -94,7 +94,7 @@ class InventarioController extends ActiveRecord
             return;
         }
 
-        // Validación del precio de venta
+        // Sanitización y validación de precio de venta
         $_POST['inventario_precio_venta'] = filter_var($_POST['inventario_precio_venta'], FILTER_VALIDATE_FLOAT);
 
         if ($_POST['inventario_precio_venta'] <= 0) {
@@ -106,7 +106,7 @@ class InventarioController extends ActiveRecord
             return;
         }
 
-        // Validación del precio de compra (opcional)
+        // Sanitización y validación de precio de compra (opcional)
         if (!empty($_POST['inventario_precio_compra']) && trim($_POST['inventario_precio_compra']) !== '') {
             $_POST['inventario_precio_compra'] = filter_var($_POST['inventario_precio_compra'], FILTER_VALIDATE_FLOAT);
 
@@ -118,42 +118,93 @@ class InventarioController extends ActiveRecord
                 ]);
                 return;
             }
-        } else {
-            $_POST['inventario_precio_compra'] = null;
-        }
 
-        // Verificar que el modelo no esté ya en inventario
-        $inventarioExistente = self::fetchFirst("SELECT inventario_id FROM inventario WHERE modelo_id = {$_POST['modelo_id']} AND inventario_situacion = 1");
-        if ($inventarioExistente) {
-            http_response_code(400);
+            // VALIDACIÓN DE NEGOCIO: Margen mínimo de ganancia
+            if ($_POST['inventario_precio_venta'] <= $_POST['inventario_precio_compra']) {
+                http_response_code(400);
+                echo json_encode([
+                    'codigo' => 0,
+                    'mensaje' => 'El precio de venta debe ser mayor al precio de compra'
+                ]);
+                return;
+            }
+            } else {
+                $_POST['inventario_precio_compra'] = null;
+            }
+
+        // VALIDACIÓN 1: Verificar que el modelo existe y está activo
+        try {
+            $sql = "SELECT COUNT(*) as total FROM modelos 
+                    WHERE modelo_id = " . self::$db->quote($_POST['modelo_id']) . "
+                    AND modelo_situacion = 1";
+            
+            $resultado = self::fetchFirst($sql);
+            
+            if (!$resultado || $resultado['total'] == 0) {
+                http_response_code(400);
+                echo json_encode([
+                    'codigo' => 0,
+                    'mensaje' => 'El modelo seleccionado no existe o no está activo'
+                ]);
+                return;
+            }
+            
+        } catch (Exception $e) {
+            http_response_code(500);
             echo json_encode([
                 'codigo' => 0,
-                'mensaje' => 'Este modelo ya está registrado en el inventario'
+                'mensaje' => 'Error al verificar modelo existente',
+                'detalle' => $e->getMessage()
             ]);
             return;
         }
 
-        //se envian los datos a guardar despues de sanitizar
+        // VALIDACIÓN 2: Verificar inventario único por modelo (patrón consolidado)
         try {
-            $inventario = new Inventario(
-                [
-                    'modelo_id' => $_POST['modelo_id'],
-                    'inventario_stock_actual' => $_POST['inventario_stock_actual'],
-                    'inventario_precio_venta' => $_POST['inventario_precio_venta'],
-                    'inventario_precio_compra' => $_POST['inventario_precio_compra'],
-                    'inventario_fecha_actualizacion' => date('Y-m-d H:i:s'),
-                    'inventario_situacion' => 1
+            $sql = "SELECT COUNT(*) as total FROM inventario 
+                    WHERE modelo_id = " . self::$db->quote($_POST['modelo_id']) . "
+                    AND inventario_situacion = 1";
+            
+            $resultado = self::fetchFirst($sql);
+            
+            if ($resultado && $resultado['total'] > 0) {
+                http_response_code(400);
+                echo json_encode([
+                    'codigo' => 0,
+                    'mensaje' => 'Este modelo ya está registrado en el inventario'
+                ]);
+                return;
+            }
+            
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'codigo' => 0,
+                'mensaje' => 'Error al verificar inventario existente',
+                'detalle' => $e->getMessage()
+            ]);
+            return;
+        }
 
-                ]
-            );
+        // Creación del inventario
+        try {
+            $inventario = new Inventario([
+                'modelo_id' => $_POST['modelo_id'],
+                'inventario_stock_actual' => $_POST['inventario_stock_actual'],
+                'inventario_precio_venta' => $_POST['inventario_precio_venta'],
+                'inventario_precio_compra' => $_POST['inventario_precio_compra'],
+                'inventario_fecha_actualizacion' => date('Y-m-d H:i:s'),
+                'inventario_situacion' => 1
+            ]);
 
             $crear = $inventario->crear();
 
             http_response_code(200);
             echo json_encode([
                 'codigo' => 1,
-                'mensaje' => 'Exito al guardar en inventario'
+                'mensaje' => 'Éxito al registrar producto en inventario'
             ]);
+            
         } catch (Exception $e) {
             http_response_code(400);
             echo json_encode([
@@ -161,18 +212,18 @@ class InventarioController extends ActiveRecord
                 'mensaje' => 'Error al guardar en inventario',
                 'detalle' => $e->getMessage()
             ]);
-            return;
         }
     }
 
-    public static function buscarInventario(){
-        
+    public static function buscarInventario()
+    {
         try {
+            // CORRECCIÓN INFORMIX: Usar operador || en lugar de CONCAT()
             $sql = "SELECT i.inventario_id, i.modelo_id, i.inventario_stock_actual, 
-                           i.inventario_precio_venta, i.inventario_precio_compra, 
-                           i.inventario_fecha_actualizacion,
-                           m.modelo_nombre, ma.marca_nombre,
-                           CONCAT(ma.marca_nombre, ' - ', m.modelo_nombre) as modelo_completo
+                        i.inventario_precio_venta, i.inventario_precio_compra, 
+                        i.inventario_fecha_actualizacion,
+                        m.modelo_nombre, ma.marca_nombre,
+                        (ma.marca_nombre || ' - ' || m.modelo_nombre) as modelo_completo
                     FROM inventario i
                     JOIN modelos m ON i.modelo_id = m.modelo_id
                     JOIN marcas ma ON m.marca_id = ma.marca_id
@@ -186,34 +237,33 @@ class InventarioController extends ActiveRecord
                     'codigo' => 1,
                     'mensaje' => 'Inventario obtenido correctamente',
                     'data' => $data
-
                 ]);
-            }else{
+            } else {
                 http_response_code(400);
                 echo json_encode([
                     'codigo' => 0,
                     'mensaje' => 'Error al obtener inventario',
                     'detalle' => 'No hay productos en inventario'
                 ]);
-
             }
 
         } catch (Exception $e) {
             http_response_code(500);
-                echo json_encode([
-                    'codigo' => 0,
-                    'mensaje' => 'Error en el servidor',
-                    'detalle' => $e->getMessage()
-                ]);
+            echo json_encode([
+                'codigo' => 0,
+                'mensaje' => 'Error en el servidor',
+                'detalle' => $e->getMessage()
+            ]);
         }
     }
 
-    public static function modificarInventario(){
+    public static function modificarInventario()
+    {
         getHeadersApi();
 
         $id = $_POST['inventario_id'];
 
-        // Validación del stock
+        // Sanitización y validación de stock
         $_POST['inventario_stock_actual'] = filter_var($_POST['inventario_stock_actual'], FILTER_VALIDATE_INT);
 
         if ($_POST['inventario_stock_actual'] < 0) {
@@ -225,7 +275,7 @@ class InventarioController extends ActiveRecord
             return;
         }
 
-        // Validación del precio de venta
+        // Sanitización y validación de precio de venta
         $_POST['inventario_precio_venta'] = filter_var($_POST['inventario_precio_venta'], FILTER_VALIDATE_FLOAT);
 
         if ($_POST['inventario_precio_venta'] <= 0) {
@@ -237,7 +287,7 @@ class InventarioController extends ActiveRecord
             return;
         }
 
-        // Validación del precio de compra (opcional)
+        // Sanitización y validación de precio de compra (opcional)
         if (!empty($_POST['inventario_precio_compra']) && trim($_POST['inventario_precio_compra']) !== '') {
             $_POST['inventario_precio_compra'] = filter_var($_POST['inventario_precio_compra'], FILTER_VALIDATE_FLOAT);
 
@@ -249,36 +299,57 @@ class InventarioController extends ActiveRecord
                 ]);
                 return;
             }
+
+            
+            if ($_POST['inventario_precio_venta'] <= $_POST['inventario_precio_compra']) {
+                http_response_code(400);
+                echo json_encode([
+                    'codigo' => 0,
+                    'mensaje' => 'El precio de venta debe ser mayor al precio de compra'
+                ]);
+                return;
+            }
         } else {
             $_POST['inventario_precio_compra'] = null;
         }
 
-       try {
+        
+        try {
             $data = Inventario::find($id);
-            $data-> sincronizar(
-                [
-                    'inventario_stock_actual' => $_POST['inventario_stock_actual'],
-                    'inventario_precio_venta' => $_POST['inventario_precio_venta'],
-                    'inventario_precio_compra' => $_POST['inventario_precio_compra'],
-                    'inventario_fecha_actualizacion' => date('Y-m-d H:i:s'),
-                    'inventario_situacion' => 1
-                ]
-            );
+            
+            if (!$data) {
+                http_response_code(404);
+                echo json_encode([
+                    'codigo' => 0,
+                    'mensaje' => 'Registro de inventario no encontrado'
+                ]);
+                return;
+            }
+            
+            $data->sincronizar([
+                'inventario_stock_actual' => $_POST['inventario_stock_actual'],
+                'inventario_precio_venta' => $_POST['inventario_precio_venta'],
+                'inventario_precio_compra' => $_POST['inventario_precio_compra'],
+                'inventario_fecha_actualizacion' => date('Y-m-d H:i:s'),
+                'inventario_situacion' => 1
+            ]);
+            
             $data->actualizar();
+
             http_response_code(200);
             echo json_encode([
                 'codigo' => 1,
-                'mensaje' => 'La informacion del inventario ha sido modificada exitosamente'
+                'mensaje' => 'La información del inventario ha sido modificada exitosamente'
             ]);
-       } catch (Exception $e) {
+            
+        } catch (Exception $e) {
             http_response_code(400);
             echo json_encode([
                 'codigo' => 0,
-                'mensaje' => 'Error al modificar',
-                'detalle' => $e->getMessage(),
+                'mensaje' => 'Error al modificar inventario',
+                'detalle' => $e->getMessage()
             ]);
-       }
-
+        }
     }
 
     public static function eliminarInventario()

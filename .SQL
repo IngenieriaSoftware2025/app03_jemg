@@ -20,6 +20,28 @@ CREATE TABLE marcas (
     marca_situacion SMALLINT DEFAULT 1
 );
 
+-- TABLA DE MODELOS DE CELULARES
+CREATE TABLE modelos (
+    modelo_id SERIAL PRIMARY KEY,
+    marca_id INT NOT NULL,
+    modelo_nombre VARCHAR(100) NOT NULL,
+    modelo_descripcion VARCHAR(200),
+    modelo_especificaciones TEXT,
+    modelo_precio_referencia DECIMAL(10,2),
+    modelo_situacion SMALLINT DEFAULT 1,
+    FOREIGN KEY (marca_id) REFERENCES marcas(marca_id)
+);
+
+CREATE TABLE inventario (
+    inventario_id SERIAL PRIMARY KEY,
+    modelo_id INT NOT NULL,
+    inventario_stock_actual INT NOT NULL,
+    inventario_precio_venta DECIMAL(10,2) NOT NULL,
+    inventario_precio_compra DECIMAL(10,2),
+    inventario_fecha_actualizacion DATETIME YEAR TO SECOND,
+    inventario_situacion SMALLINT DEFAULT 1,
+    FOREIGN KEY (modelo_id) REFERENCES modelos(modelo_id)
+);
 
 -- TABLA DE USUARIOS
 CREATE TABLE usuarios(
@@ -44,17 +66,7 @@ CREATE TABLE usuarios(
 );
 
 
--- TABLA DE MODELOS DE CELULARES
-CREATE TABLE modelos (
-    modelo_id SERIAL PRIMARY KEY,
-    marca_id INT NOT NULL,
-    modelo_nombre VARCHAR(100) NOT NULL,
-    modelo_descripcion VARCHAR(200),
-    modelo_especificaciones TEXT,
-    modelo_precio_referencia DECIMAL(10,2),
-    modelo_situacion SMALLINT DEFAULT 1,
-    FOREIGN KEY (marca_id) REFERENCES marcas(marca_id)
-);
+
 
 
 -- TABLA DE SERVICIOS DE REPARACIÓN
@@ -68,16 +80,7 @@ CREATE TABLE servicios (
 );
 --------------------------------------------------------------------------------------------------------------------------------------------
 
-CREATE TABLE inventario (
-    inventario_id SERIAL PRIMARY KEY,
-    modelo_id INT NOT NULL,
-    inventario_stock_actual INT NOT NULL,
-    inventario_precio_venta DECIMAL(10,2) NOT NULL,
-    inventario_precio_compra DECIMAL(10,2),
-    inventario_fecha_actualizacion DATETIME YEAR TO SECOND,
-    inventario_situacion SMALLINT DEFAULT 1,
-    FOREIGN KEY (modelo_id) REFERENCES modelos(modelo_id)
-);
+
 
 CREATE TABLE ventas (
     venta_id SERIAL PRIMARY KEY,

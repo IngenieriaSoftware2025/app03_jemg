@@ -48,15 +48,6 @@
                             </div>
                         </div>
 
-                        <!-- Especificaciones -->
-                        <div class="row mb-3 justify-content-center">
-                            <div class="col-lg-12">
-                                <label for="modelo_especificaciones" class="form-label">Especificaciones Técnicas</label>
-                                <textarea class="form-control" id="modelo_especificaciones" name="modelo_especificaciones" 
-                                          rows="4" placeholder="Pantalla, procesador, memoria, cámara, batería, etc."></textarea>
-                            </div>
-                        </div>
-
                         <div class="row justify-content-center mt-5">
                             <div class="col-auto">
                                 <button class="btn btn-success" type="submit" id="BtnGuardar">

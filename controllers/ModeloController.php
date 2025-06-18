@@ -48,7 +48,7 @@ class ModeloController extends ActiveRecord
     {
         getHeadersApi();
 
-        // Validaciones básicas
+
         if (empty($_POST['marca_id']) || empty($_POST['modelo_nombre'])) {
             http_response_code(400);
             echo json_encode([
@@ -58,34 +58,108 @@ class ModeloController extends ActiveRecord
             return;
         }
 
-        // Sanitizar datos
+
         $_POST['modelo_nombre'] = ucwords(strtolower(trim(htmlspecialchars($_POST['modelo_nombre']))));
         $_POST['modelo_descripcion'] = trim(htmlspecialchars($_POST['modelo_descripcion'] ?? ''));
-        $_POST['modelo_especificaciones'] = trim(htmlspecialchars($_POST['modelo_especificaciones'] ?? ''));
+        
+
+        if (strlen($_POST['modelo_nombre']) < 2) {
+            http_response_code(400);
+            echo json_encode([
+                'codigo' => 0,
+                'mensaje' => 'El nombre del modelo debe tener más de 1 carácter'
+            ]);
+            return;
+        }
+
+
+        $_POST['modelo_precio_referencia'] = filter_var($_POST['modelo_precio_referencia'], FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
+        
+        if ($_POST['modelo_precio_referencia'] < 0) {
+            http_response_code(400);
+            echo json_encode([
+                'codigo' => 0,
+                'mensaje' => 'El precio de referencia debe ser un valor positivo'
+            ]);
+            return;
+        }
+
 
         try {
+            $sql = "SELECT COUNT(*) as total FROM marcas 
+                    WHERE marca_id = " . self::$db->quote($_POST['marca_id']) . "
+                    AND marca_situacion = 1";
+            
+            $resultado = self::fetchFirst($sql);
+            
+            if (!$resultado || $resultado['total'] == 0) {
+                http_response_code(400);
+                echo json_encode([
+                    'codigo' => 0,
+                    'mensaje' => 'La marca seleccionada no existe o no está activa'
+                ]);
+                return;
+            }
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'codigo' => 0,
+                'mensaje' => 'Error al verificar marca existente',
+                'detalle' => $e->getMessage()
+            ]);
+            return;
+        }
 
-            $data = new Modelos([
+
+        try {
+            $sql = "SELECT COUNT(*) as total FROM modelos 
+                    WHERE modelo_nombre = " . self::$db->quote($_POST['modelo_nombre']) . "
+                    AND marca_id = " . self::$db->quote($_POST['marca_id']) . "
+                    AND modelo_situacion = 1";
+            
+            $resultado = self::fetchFirst($sql);
+            
+            if ($resultado && $resultado['total'] > 0) {
+                http_response_code(400);
+                echo json_encode([
+                    'codigo' => 0,
+                    'mensaje' => 'Ya existe un modelo con ese nombre para la marca seleccionada'
+                ]);
+                return;
+            }
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'codigo' => 0,
+                'mensaje' => 'Error al verificar modelo existente',
+                'detalle' => $e->getMessage()
+            ]);
+            return;
+        }
+
+
+        try {
+            $modelo = new Modelos([
                 'marca_id' => $_POST['marca_id'],
                 'modelo_nombre' => $_POST['modelo_nombre'],
                 'modelo_descripcion' => $_POST['modelo_descripcion'],
-                'modelo_especificaciones' => $_POST['modelo_especificaciones'],
-                'modelo_precio_referencia' => $_POST['modelo_precio_referencia'] ?? 0.00,
+                'modelo_precio_referencia' => $_POST['modelo_precio_referencia'],
                 'modelo_situacion' => 1
             ]);
 
-            $crear = $data->crear();
+            $crear = $modelo->crear();
 
             http_response_code(200);
             echo json_encode([
                 'codigo' => 1,
                 'mensaje' => 'Éxito, el modelo ' . $_POST['modelo_nombre'] . ' ha sido registrado correctamente'
             ]);
+            
         } catch (Exception $e) {
             http_response_code(400);
             echo json_encode([
                 'codigo' => 0,
-                'mensaje' => 'Error al guardar',
+                'mensaje' => 'Error al guardar modelo',
                 'detalle' => $e->getMessage(),
             ]);
         }
@@ -93,7 +167,6 @@ class ModeloController extends ActiveRecord
 
     public static function buscarModelo()
     {
-        // Evita que se muestren errores HTML
         header('Content-Type: application/json');
         
         try {
@@ -116,10 +189,10 @@ class ModeloController extends ActiveRecord
 
             $where = implode(" AND ", $condiciones);
 
+            // Consulta SIN especificaciones
             $sql = "SELECT mod.modelo_id, mod.marca_id, mod.modelo_nombre, 
-                        mod.modelo_descripcion, mod.modelo_especificaciones, 
-                        mod.modelo_precio_referencia, mod.modelo_situacion,
-                        mar.marca_nombre
+                        mod.modelo_descripcion, mod.modelo_precio_referencia, 
+                        mod.modelo_situacion, mar.marca_nombre
                     FROM modelos mod
                     JOIN marcas mar ON mod.marca_id = mar.marca_id
                     WHERE $where
@@ -127,7 +200,6 @@ class ModeloController extends ActiveRecord
             
             $data = self::fetchArray($sql);
 
-            // Limpia cualquier output previo
             ob_clean();
             
             echo json_encode([
@@ -137,7 +209,6 @@ class ModeloController extends ActiveRecord
             ]);
             
         } catch (Exception $e) {
-            // Limpia cualquier output previo
             ob_clean();
             
             echo json_encode([
@@ -151,45 +222,130 @@ class ModeloController extends ActiveRecord
 
     public static function modificarModelo()
     {
+        getHeadersApi();
+
+        $id = $_POST['modelo_id'];
+
+        // Validaciones básicas de campos obligatorios
+        if (empty($_POST['marca_id']) || empty($_POST['modelo_nombre'])) {
+            http_response_code(400);
+            echo json_encode([
+                'codigo' => 0,
+                'mensaje' => 'Marca y nombre del modelo son campos obligatorios'
+            ]);
+            return;
+        }
+
+        // Sanitización de datos (SIN especificaciones)
+        $_POST['modelo_nombre'] = ucwords(strtolower(trim(htmlspecialchars($_POST['modelo_nombre']))));
+        $_POST['modelo_descripcion'] = trim(htmlspecialchars($_POST['modelo_descripcion'] ?? ''));
+        
+        // Validación de nombre mínimo
+        if (strlen($_POST['modelo_nombre']) < 2) {
+            http_response_code(400);
+            echo json_encode([
+                'codigo' => 0,
+                'mensaje' => 'El nombre del modelo debe tener más de 1 carácter'
+            ]);
+            return;
+        }
+
+        // Sanitización y validación de precio
+        $_POST['modelo_precio_referencia'] = filter_var($_POST['modelo_precio_referencia'], FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
+        
+        if ($_POST['modelo_precio_referencia'] < 0) {
+            http_response_code(400);
+            echo json_encode([
+                'codigo' => 0,
+                'mensaje' => 'El precio de referencia debe ser un valor positivo'
+            ]);
+            return;
+        }
+
+        // VALIDACIÓN: Verificar que la marca existe y está activa
         try {
-            $id = filter_var($_POST['modelo_id'], FILTER_SANITIZE_NUMBER_INT);
+            $sql = "SELECT COUNT(*) as total FROM marcas 
+                    WHERE marca_id = " . self::$db->quote($_POST['marca_id']) . "
+                    AND marca_situacion = 1";
             
-            // Validaciones básicas
-            if (empty($_POST['marca_id']) || empty($_POST['modelo_nombre'])) {
+            $resultado = self::fetchFirst($sql);
+            
+            if (!$resultado || $resultado['total'] == 0) {
                 http_response_code(400);
                 echo json_encode([
                     'codigo' => 0,
-                    'mensaje' => 'Marca y nombre del modelo son campos obligatorios'
+                    'mensaje' => 'La marca seleccionada no existe o no está activa'
                 ]);
                 return;
             }
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'codigo' => 0,
+                'mensaje' => 'Error al verificar marca existente',
+                'detalle' => $e->getMessage()
+            ]);
+            return;
+        }
 
-            // Sanitizar datos
-            $modelo_nombre = ucwords(strtolower(trim(htmlspecialchars($_POST['modelo_nombre']))));
-            $modelo_descripcion = trim(htmlspecialchars($_POST['modelo_descripcion'] ?? ''));
-            $modelo_especificaciones = trim(htmlspecialchars($_POST['modelo_especificaciones'] ?? ''));
-            $precio = $_POST['modelo_precio_referencia'] ?? 0.00;
+        // VALIDACIÓN: Verificar modelo único por marca (excluyendo el actual)
+        try {
+            $sql = "SELECT COUNT(*) as total FROM modelos 
+                    WHERE modelo_nombre = " . self::$db->quote($_POST['modelo_nombre']) . "
+                    AND marca_id = " . self::$db->quote($_POST['marca_id']) . "
+                    AND modelo_id != " . self::$db->quote($id) . "
+                    AND modelo_situacion = 1";
             
-            // Actualizar directamente con SQL
-            $sql = "UPDATE modelos SET 
-                    marca_id = {$_POST['marca_id']},
-                    modelo_nombre = '{$modelo_nombre}',
-                    modelo_descripcion = '{$modelo_descripcion}',
-                    modelo_especificaciones = '{$modelo_especificaciones}',
-                    modelo_precio_referencia = {$precio},
-                    modelo_situacion = 1
-                    WHERE modelo_id = {$id}";
+            $resultado = self::fetchFirst($sql);
             
-            self::SQL($sql);
+            if ($resultado && $resultado['total'] > 0) {
+                http_response_code(400);
+                echo json_encode([
+                    'codigo' => 0,
+                    'mensaje' => 'Ya existe otro modelo con ese nombre para la marca seleccionada'
+                ]);
+                return;
+            }
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'codigo' => 0,
+                'mensaje' => 'Error al verificar modelo existente',
+                'detalle' => $e->getMessage()
+            ]);
+            return;
+        }
+
+        try {
+            $data = Modelos::find($id);
+            
+            if (!$data) {
+                http_response_code(404);
+                echo json_encode([
+                    'codigo' => 0,
+                    'mensaje' => 'Modelo no encontrado'
+                ]);
+                return;
+            }
+            
+            $data->sincronizar([
+                'marca_id' => $_POST['marca_id'],
+                'modelo_nombre' => $_POST['modelo_nombre'],
+                'modelo_descripcion' => $_POST['modelo_descripcion'],
+                'modelo_precio_referencia' => $_POST['modelo_precio_referencia'],
+                'modelo_situacion' => 1
+            ]);
+            
+            $data->actualizar();
 
             http_response_code(200);
             echo json_encode([
                 'codigo' => 1,
-                'mensaje' => 'El modelo ' . $modelo_nombre . ' ha sido modificado exitosamente'
+                'mensaje' => 'El modelo ' . $_POST['modelo_nombre'] . ' ha sido modificado exitosamente'
             ]);
             
         } catch (Exception $e) {
-            http_response_code(500);
+            http_response_code(400);
             echo json_encode([
                 'codigo' => 0,
                 'mensaje' => 'Error al modificar modelo',
@@ -220,8 +376,6 @@ class ModeloController extends ActiveRecord
             ]);
         }
     }
-
-
 
 }
 

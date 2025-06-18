@@ -3,13 +3,11 @@ import Swal from "sweetalert2";
 import { validarFormulario } from '../funciones';
 import DataTable from "datatables.net-bs5";
 import { lenguaje } from "../lenguaje";
-import { data } from "jquery";
 
 const FormModelos = document.getElementById('FormModelos');
 const BtnGuardar = document.getElementById('BtnGuardar');
 const BtnModificar = document.getElementById('BtnModificar');
 const BtnLimpiar = document.getElementById('BtnLimpiar');
-const BtnEliminar = document.getElementById('BtnEliminar');
 
 const CargarMarcas = async () => {
     const url = '/app03_jemg/modelos/obtenerMarcas';
@@ -36,8 +34,8 @@ const CargarMarcas = async () => {
 }
 
 const GuardarModelo = async (event) => {
-   event.preventDefault(); //evita el envio del formulario
-   BtnGuardar.disabled = false;
+   event.preventDefault();
+   BtnGuardar.disabled = true;
 
    if (!validarFormulario(FormModelos, ['modelo_id'])) {
        Swal.fire({
@@ -48,27 +46,20 @@ const GuardarModelo = async (event) => {
            showConfirmButton: false,
            timer: 3000
        });
+       BtnGuardar.disabled = false;
        return;
    }
 
-   //crea una instancia de la clase FormData
    const body = new FormData(FormModelos);
-
    const url = '/app03_jemg/modelos/guardarModelo';
-   const config = {
-       method: 'POST',
-       body
-   }
+   const config = { method: 'POST', body }
 
-   //tratar de guardar un modelo
    try {
        const respuesta = await fetch(url, config);
        const datos = await respuesta.json();
+       const { codigo, mensaje } = datos;
 
-       const { codigo, mensaje } = datos
-       console.log("Respuesta del servidor:", datos);
        if (codigo == 1) {
-
            Swal.fire({
                position: "center",
                icon: "success",
@@ -80,7 +71,6 @@ const GuardarModelo = async (event) => {
 
            limpiarTodo();
            BuscarModelo();
-
        } else {
            Swal.fire({
                position: "center",
@@ -90,13 +80,11 @@ const GuardarModelo = async (event) => {
                showConfirmButton: false,
                timer: 3000,
            });
-           return;
        }
    } catch (error) {
-       console.log(error)
+       console.log(error);
    }
    BtnGuardar.disabled = false;
-
 }
 
 const datatable = new DataTable('#TableModelos', {
@@ -118,15 +106,31 @@ const datatable = new DataTable('#TableModelos', {
        {
            title: 'No.',
            data: 'modelo_id',
-           width: '%',
+           width: '5%',
            render: (data, type, row, meta) => meta.row + 1
        },
-       { title: 'Marca', data: 'marca_nombre' },
-       { title: 'Nombre del Modelo', data: 'modelo_nombre' },
-       { title: 'Descripción', data: 'modelo_descripcion' },
        { 
-           title: 'Precio Referencia', 
+           title: 'Marca', 
+           data: 'marca_nombre',
+           width: '20%'
+       },
+       { 
+           title: 'Modelo', 
+           data: 'modelo_nombre',
+           width: '25%'
+       },
+       { 
+           title: 'Descripción', 
+           data: 'modelo_descripcion',
+           width: '30%',
+           render: (data, type, row, meta) => {
+               return data && data.length > 50 ? data.substring(0, 50) + '...' : data || 'Sin descripción';
+           }
+       },
+       { 
+           title: 'Precio', 
            data: 'modelo_precio_referencia',
+           width: '10%',
            render: (data, type, row, meta) => {
                return data ? `Q ${parseFloat(data).toFixed(2)}` : 'No definido';
            }
@@ -134,54 +138,43 @@ const datatable = new DataTable('#TableModelos', {
        {
            title: 'Acciones',
            data: 'modelo_id',
+           width: '10%',
            searchable: false,
            orderable: false,
            render: (data, type, row, meta) => {
                return `
                <div class='d-flex justify-content-center'>
-                    <button class='btn btn-warning modificar mx-1' 
+                    <button class='btn btn-warning btn-sm modificar mx-1' 
                         data-id="${data}" 
                         data-marca="${row.marca_id}"
                         data-nombre="${row.modelo_nombre}"  
                         data-descripcion="${row.modelo_descripcion || ''}"
-                        data-especificaciones="${row.modelo_especificaciones || ''}"
                         data-precio="${row.modelo_precio_referencia || ''}"
-                        <i class='bi bi-pencil-square me-1'></i> Modificar
+                        title="Modificar">
+                        <i class='bi bi-pencil'></i>
                     </button>
-                    <button class='btn btn-danger eliminar mx-1' 
-                        data-id="${data}">
-                       <i class="bi bi-trash3 me-1"></i>Eliminar
+                    <button class='btn btn-danger btn-sm eliminar mx-1' 
+                        data-id="${data}" title="Eliminar">
+                       <i class="bi bi-trash3"></i>
                     </button>
                 </div>`;
            }
        }
    ],
-})
+});
 
-const BuscarModelo = async () =>{
+const BuscarModelo = async () => {
    const url = '/app03_jemg/modelos/buscarModelo';
-   const config = {
-       method: 'GET'
-   }
+   const config = { method: 'GET' }
 
    try {
-       const respuesta = await fetch(url, config)
+       const respuesta = await fetch(url, config);
        const datos = await respuesta.json();
-       const { codigo, mensaje, data } = datos
+       const { codigo, mensaje, data } = datos;
 
-       if (codigo ===1) {
-           Swal.fire({
-               position: "center",
-               icon: "success",
-               title: "Éxito",
-               text: mensaje,
-               showConfirmButton: false,
-               timer: 3000,
-           });
-
+       if (codigo === 1) {
            datatable.clear().draw();
            datatable.rows.add(data).draw();
-           
        } else {
            Swal.fire({
                position: "center",
@@ -191,46 +184,38 @@ const BuscarModelo = async () =>{
                showConfirmButton: false,
                timer: 3000,
            });
-           return;
        }
    } catch (error) {
        console.log(error);
-       
    }
-
 }
 
 const llenarFormulario = (event) => {
-   const datos = event.currentTarget.dataset
+   const datos = event.currentTarget.dataset;
 
-   document.getElementById('modelo_id').value = datos.id
-   document.getElementById('marca_id').value = datos.marca
-   document.getElementById('modelo_nombre').value = datos.nombre
-   document.getElementById('modelo_descripcion').value = datos.descripcion
-   document.getElementById('modelo_especificaciones').value = datos.especificaciones
-   document.getElementById('modelo_precio_referencia').value = datos.precio
+   document.getElementById('modelo_id').value = datos.id;
+   document.getElementById('marca_id').value = datos.marca;
+   document.getElementById('modelo_nombre').value = datos.nombre;
+   document.getElementById('modelo_descripcion').value = datos.descripcion;
+   document.getElementById('modelo_precio_referencia').value = datos.precio;
 
    BtnGuardar.classList.add('d-none');
    BtnModificar.classList.remove('d-none');
 
-   window.scrollTo({
-       top: 0
-   })
-
+   window.scrollTo({ top: 0 });
 }
 
 const limpiarTodo = () => {
    FormModelos.reset();
    BtnGuardar.classList.remove('d-none');
    BtnModificar.classList.add('d-none');
-
 }
 
 const ModificarModelo = async (event) => {
    event.preventDefault();
    BtnModificar.disabled = true;
 
-   if (!validarFormulario(FormModelos, [''])) {
+   if (!validarFormulario(FormModelos, ['modelo_id'])) {
        Swal.fire({
            position: "center",
            icon: "warning",
@@ -244,18 +229,13 @@ const ModificarModelo = async (event) => {
    }
 
    const body = new FormData(FormModelos);
-
    const url = '/app03_jemg/modelos/modificarModelo';
-   const config = {
-       method: 'POST',
-       body
-   }
+   const config = { method: 'POST', body }
 
    try {
-       
        const respuesta = await fetch(url, config);
        const datos = await respuesta.json();
-       const { codigo, mensaje } = datos
+       const { codigo, mensaje } = datos;
 
        if (codigo === 1) {
            Swal.fire({
@@ -269,7 +249,6 @@ const ModificarModelo = async (event) => {
 
            limpiarTodo();
            BuscarModelo();
-
        } else {
            Swal.fire({
                position: "center",
@@ -279,9 +258,7 @@ const ModificarModelo = async (event) => {
                showConfirmButton: false,
                timer: 3000,
            });
-           return;
        }
-
    } catch (error) {
        console.log(error);
    }
@@ -289,7 +266,7 @@ const ModificarModelo = async (event) => {
 }
 
 const EliminarModelo = async (e) => {
-   const idModelo = e.currentTarget.dataset.id
+   const idModelo = e.currentTarget.dataset.id;
 
    const AlertaConfirmarEliminar = await Swal.fire({
        position: "center",
@@ -305,7 +282,6 @@ const EliminarModelo = async (e) => {
 
    if (!AlertaConfirmarEliminar.isConfirmed) return;
 
-   // Preparamos el body para POST
    const body = new URLSearchParams();
    body.append('modelo_id', idModelo);
 
@@ -337,24 +313,18 @@ const EliminarModelo = async (e) => {
                timer: 1000
            });
        }
-
    } catch (error) {
        console.log(error);
    }
 };
 
-//Eventos
+// Eventos
 CargarMarcas();
 BuscarModelo();
 
-//guardar
-FormModelos.addEventListener('submit', GuardarModelo)
-
-//btn limpiar
+FormModelos.addEventListener('submit', GuardarModelo);
 BtnLimpiar.addEventListener('click', limpiarTodo);
 BtnModificar.addEventListener('click', ModificarModelo);
 
-//datatable
 datatable.on('click', '.eliminar', EliminarModelo);
 datatable.on('click', '.modificar', llenarFormulario);
-
